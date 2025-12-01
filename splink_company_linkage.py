@@ -20,14 +20,19 @@ from pyspark.sql.window import Window
 
 # Import Splink with fallback for different versions
 try:
-    from splink.spark.linker import SparkLinker
+    # Splink 4.x import path
+    from splink.spark.spark_linker import SparkLinker
 except ImportError:
     try:
-        from splink.spark import SparkLinker
+        # Alternative import path (older versions)
+        from splink.spark.linker import SparkLinker
     except ImportError:
-        raise ImportError(
-            "Splink Spark backend not found. Please install with: pip install 'splink[spark]'"
-        )
+        try:
+            from splink.spark import SparkLinker
+        except ImportError:
+            raise ImportError(
+                "Splink Spark backend not found. Please install with: pip install 'splink[spark]'"
+            )
 
 from splink.comparison import Comparison, ComparisonLevel
 from splink.comparison_library import (
@@ -36,16 +41,30 @@ from splink.comparison_library import (
     jaccard_at_thresholds
 )
 
+# Import for Spark similarity JAR (required for similarity functions)
+try:
+    from splink.backends.spark import similarity_jar_location
+    SIMILARITY_JAR_AVAILABLE = True
+except ImportError:
+    try:
+        # Alternative import path
+        from splink.spark import similarity_jar_location
+        SIMILARITY_JAR_AVAILABLE = True
+    except ImportError:
+        SIMILARITY_JAR_AVAILABLE = False
+        similarity_jar_location = None
+
 
 def create_spark_session(
     app_name: str = "SplinkCompanyLinkage",
     master: str = "local[*]",
     driver_memory: str = "8g",
     executor_memory: str = "8g",
-    max_result_size: str = "4g"
+    max_result_size: str = "4g",
+    parallelism: int = 8
 ) -> SparkSession:
     """
-    Create and configure Spark session for Splink.
+    Create and configure Spark session for Splink with similarity JAR support.
     
     Args:
         app_name: Application name
@@ -53,21 +72,47 @@ def create_spark_session(
         driver_memory: Driver memory allocation
         executor_memory: Executor memory allocation
         max_result_size: Maximum result size
+        parallelism: Default parallelism (adjust based on cluster size)
         
     Returns:
-        Configured SparkSession
+        Configured SparkSession with Splink similarity functions
     """
-    spark = SparkSession.builder \
-        .appName(app_name) \
-        .master(master) \
-        .config("spark.driver.memory", driver_memory) \
-        .config("spark.executor.memory", executor_memory) \
-        .config("spark.driver.maxResultSize", max_result_size) \
-        .config("spark.sql.shuffle.partitions", "200") \
-        .config("spark.default.parallelism", "200") \
-        .config("spark.sql.adaptive.enabled", "true") \
-        .config("spark.sql.adaptive.coalescePartitions.enabled", "true") \
-        .getOrCreate()
+    from pyspark import SparkConf, SparkContext
+    
+    # Create Spark configuration
+    conf = SparkConf()
+    conf.set("spark.driver.memory", driver_memory)
+    conf.set("spark.executor.memory", executor_memory)
+    conf.set("spark.driver.maxResultSize", max_result_size)
+    conf.set("spark.sql.shuffle.partitions", str(parallelism * 25))  # ~25 partitions per core
+    conf.set("spark.default.parallelism", str(parallelism))
+    conf.set("spark.sql.adaptive.enabled", "true")
+    conf.set("spark.sql.adaptive.coalescePartitions.enabled", "true")
+    conf.set("spark.sql.codegen.wholeStage", "false")  # Can help with stability
+    
+    # Add Splink similarity JAR (required for Jaro-Winkler, Jaccard, etc.)
+    if SIMILARITY_JAR_AVAILABLE and similarity_jar_location is not None:
+        try:
+            jar_path = similarity_jar_location()
+            conf.set("spark.jars", jar_path)
+            print(f"Splink similarity JAR loaded: {jar_path}")
+        except Exception as e:
+            print(f"Warning: Could not load Splink similarity JAR: {e}")
+            print("Similarity functions may not work correctly.")
+    else:
+        print("Warning: Splink similarity JAR not available. Similarity functions may not work.")
+    
+    # Create or get SparkContext
+    sc = SparkContext.getOrCreate(conf=conf)
+    
+    # Create SparkSession
+    spark = SparkSession(sc)
+    
+    # Set checkpoint directory for iterative algorithms
+    import os
+    checkpoint_dir = "./tmp_checkpoints"
+    os.makedirs(checkpoint_dir, exist_ok=True)
+    spark.sparkContext.setCheckpointDir(checkpoint_dir)
     
     spark.sparkContext.setLogLevel("WARN")
     return spark
