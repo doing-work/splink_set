@@ -4,73 +4,26 @@ Splink Company Record Linkage Pipeline
 This script performs entity resolution on company records using Splink,
 grouping similar companies based on normalized names and country codes.
 
+Uses DuckDB backend (default, no Spark required).
 Optimized for 1-5 million records with efficient blocking strategies.
 """
 
 import os
 import json
 from typing import Optional, Tuple
-from pyspark.sql import SparkSession, DataFrame
-from pyspark.sql.functions import (
-    col, lit, when, isnan, isnull, length, max as spark_max,
-    substring, lower, trim, regexp_replace, monotonically_increasing_id,
-    collect_list, first, row_number, concat_ws
-)
-from pyspark.sql.window import Window
+import pandas as pd
 
-# Import Splink with fallback for different versions
+# Import Splink DuckDB linker (default backend, no Spark needed)
 try:
-    # Splink 4.x import path
-    from splink.spark.spark_linker import SparkLinker
+    from splink.duckdb.linker import DuckDBLinker
+    Linker = DuckDBLinker
 except ImportError:
     try:
-        # Alternative import path (older versions)
-        from splink.spark.linker import SparkLinker
+        from splink.linker import Linker
     except ImportError:
-        try:
-            from splink.spark import SparkLinker
-        except ImportError:
-            import sys
-            error_msg = """
-╔══════════════════════════════════════════════════════════════════════════════╗
-║                    SPLINK SPARK BACKEND NOT INSTALLED                       ║
-╚══════════════════════════════════════════════════════════════════════════════╝
-
-The Splink Spark backend is required but not installed.
-
-INSTALLATION INSTRUCTIONS:
-───────────────────────────────────────────────────────────────────────────────
-
-1. Run this command in a Colab cell or terminal:
-   
-   !pip install 'splink[spark]' pyspark pandas numpy
-
-2. RESTART YOUR RUNTIME (important!):
-   - In Colab: Runtime → Restart runtime
-   - In Jupyter: Kernel → Restart
-
-3. Then run this script again.
-
-ALTERNATIVE (if above doesn't work):
-───────────────────────────────────────────────────────────────────────────────
-
-!pip uninstall splink -y
-!pip install 'splink[spark]'
-# Then restart runtime
-
-VERIFICATION:
-───────────────────────────────────────────────────────────────────────────────
-
-After installation, verify with:
-  from splink.spark.spark_linker import SparkLinker
-  print("✓ Installation successful!")
-
-For more help, see: https://moj-analytical-services.github.io/splink/
-"""
-            print(error_msg)
-            raise ImportError(
-                "Splink Spark backend not found. Install with: pip install 'splink[spark]'"
-            )
+        raise ImportError(
+            "Splink not installed. Install with: pip install splink"
+        )
 
 from splink.comparison import Comparison, ComparisonLevel
 from splink.comparison_library import (
@@ -79,108 +32,28 @@ from splink.comparison_library import (
     jaccard_at_thresholds
 )
 
-# Import for Spark similarity JAR (required for similarity functions)
-try:
-    from splink.backends.spark import similarity_jar_location
-    SIMILARITY_JAR_AVAILABLE = True
-except ImportError:
-    try:
-        # Alternative import path
-        from splink.spark import similarity_jar_location
-        SIMILARITY_JAR_AVAILABLE = True
-    except ImportError:
-        SIMILARITY_JAR_AVAILABLE = False
-        similarity_jar_location = None
 
-
-def create_spark_session(
-    app_name: str = "SplinkCompanyLinkage",
-    master: str = "local[*]",
-    driver_memory: str = "8g",
-    executor_memory: str = "8g",
-    max_result_size: str = "4g",
-    parallelism: int = 8
-) -> SparkSession:
-    """
-    Create and configure Spark session for Splink with similarity JAR support.
-    
-    Args:
-        app_name: Application name
-        master: Spark master URL
-        driver_memory: Driver memory allocation
-        executor_memory: Executor memory allocation
-        max_result_size: Maximum result size
-        parallelism: Default parallelism (adjust based on cluster size)
-        
-    Returns:
-        Configured SparkSession with Splink similarity functions
-    """
-    from pyspark import SparkConf, SparkContext
-    
-    # Create Spark configuration
-    conf = SparkConf()
-    conf.set("spark.driver.memory", driver_memory)
-    conf.set("spark.executor.memory", executor_memory)
-    conf.set("spark.driver.maxResultSize", max_result_size)
-    conf.set("spark.sql.shuffle.partitions", str(parallelism * 25))  # ~25 partitions per core
-    conf.set("spark.default.parallelism", str(parallelism))
-    conf.set("spark.sql.adaptive.enabled", "true")
-    conf.set("spark.sql.adaptive.coalescePartitions.enabled", "true")
-    conf.set("spark.sql.codegen.wholeStage", "false")  # Can help with stability
-    
-    # Add Splink similarity JAR (required for Jaro-Winkler, Jaccard, etc.)
-    if SIMILARITY_JAR_AVAILABLE and similarity_jar_location is not None:
-        try:
-            jar_path = similarity_jar_location()
-            conf.set("spark.jars", jar_path)
-            print(f"Splink similarity JAR loaded: {jar_path}")
-        except Exception as e:
-            print(f"Warning: Could not load Splink similarity JAR: {e}")
-            print("Similarity functions may not work correctly.")
-    else:
-        print("Warning: Splink similarity JAR not available. Similarity functions may not work.")
-    
-    # Create or get SparkContext
-    sc = SparkContext.getOrCreate(conf=conf)
-    
-    # Create SparkSession
-    spark = SparkSession(sc)
-    
-    # Set checkpoint directory for iterative algorithms
-    import os
-    checkpoint_dir = "./tmp_checkpoints"
-    os.makedirs(checkpoint_dir, exist_ok=True)
-    spark.sparkContext.setCheckpointDir(checkpoint_dir)
-    
-    spark.sparkContext.setLogLevel("WARN")
-    return spark
+# No Spark session needed - DuckDB handles everything internally
 
 
 def load_and_prepare_data(
-    spark: SparkSession,
     csv_path: str,
     unique_id_col: Optional[str] = None
-) -> DataFrame:
+) -> pd.DataFrame:
     """
     Load CSV data and prepare it for Splink processing.
     
     Args:
-        spark: SparkSession
         csv_path: Path to input CSV file
         unique_id_col: Optional column name for unique ID (if None, will generate)
         
     Returns:
-        Prepared Spark DataFrame
+        Prepared pandas DataFrame
     """
     print(f"Loading data from {csv_path}...")
     
     # Read CSV
-    df = spark.read \
-        .option("header", "true") \
-        .option("inferSchema", "true") \
-        .option("nullValue", "") \
-        .option("emptyValue", "") \
-        .csv(csv_path)
+    df = pd.read_csv(csv_path, dtype=str, keep_default_na=False)
     
     # Validate required columns
     required_cols = ["tv_name_regulatized", "tv_country_code"]
@@ -190,39 +63,29 @@ def load_and_prepare_data(
     
     # Generate unique_id if not present
     if unique_id_col and unique_id_col in df.columns:
-        df = df.withColumnRenamed(unique_id_col, "unique_id")
+        df = df.rename(columns={unique_id_col: "unique_id"})
     else:
-        df = df.withColumn("unique_id", monotonically_increasing_id())
+        df["unique_id"] = range(len(df))
     
     # Clean and normalize data
-    df = df.withColumn(
-        "tv_name_regulatized",
-        trim(lower(regexp_replace(
-            col("tv_name_regulatized"),
-            r"[^\w\s]", ""
-        )))
-    )
-    
-    df = df.withColumn(
-        "tv_country_code",
-        trim(upper(col("tv_country_code")))
-    )
+    df["tv_name_regulatized"] = df["tv_name_regulatized"].astype(str).str.lower().str.replace(r"[^\w\s]", "", regex=True).str.strip()
+    df["tv_country_code"] = df["tv_country_code"].astype(str).str.upper().str.strip()
     
     # Filter out records with null or empty names
-    df = df.filter(
-        col("tv_name_regulatized").isNotNull() &
-        (col("tv_name_regulatized") != "") &
-        col("tv_country_code").isNotNull() &
-        (col("tv_country_code") != "")
-    )
+    df = df[
+        (df["tv_name_regulatized"].notna()) &
+        (df["tv_name_regulatized"] != "") &
+        (df["tv_country_code"].notna()) &
+        (df["tv_country_code"] != "")
+    ].copy()
     
     # Ensure unique_id is unique and not null
-    df = df.filter(col("unique_id").isNotNull())
+    df = df[df["unique_id"].notna()].copy()
     
-    record_count = df.count()
+    record_count = len(df)
     print(f"Loaded {record_count:,} records after cleaning")
     
-    return df.select("unique_id", "tv_name_regulatized", "tv_country_code")
+    return df[["unique_id", "tv_name_regulatized", "tv_country_code"]]
 
 
 def create_splink_settings() -> dict:
@@ -238,9 +101,9 @@ def create_splink_settings() -> dict:
         "blocking_rules": [
             # Primary blocking: first 2 chars of name + country
             # Note: Splink automatically adds _l and _r suffixes to column names
-            "substring(tv_name_regulatized_l, 1, 2) = substring(tv_name_regulatized_r, 1, 2) AND tv_country_code_l = tv_country_code_r",
+            "substr(tv_name_regulatized_l, 1, 2) = substr(tv_name_regulatized_r, 1, 2) AND tv_country_code_l = tv_country_code_r",
             # Secondary blocking: first 3 chars of name + country (for better recall)
-            "substring(tv_name_regulatized_l, 1, 3) = substring(tv_name_regulatized_r, 1, 3) AND tv_country_code_l = tv_country_code_r",
+            "substr(tv_name_regulatized_l, 1, 3) = substr(tv_name_regulatized_r, 1, 3) AND tv_country_code_l = tv_country_code_r",
             # Fallback: country only (for edge cases)
             "tv_country_code_l = tv_country_code_r",
         ],
@@ -299,10 +162,10 @@ def create_splink_settings() -> dict:
 
 
 def train_and_predict(
-    linker: SparkLinker,
-    df: DataFrame,
+    linker: Linker,
+    df: pd.DataFrame,
     sample_size: Optional[int] = None
-) -> SparkLinker:
+) -> Linker:
     """
     Train the Splink model.
     
@@ -317,10 +180,10 @@ def train_and_predict(
     print("Training Splink model...")
     
     # Determine training dataset
-    record_count = df.count()
+    record_count = len(df)
     if sample_size and record_count > sample_size:
         print(f"Sampling {sample_size:,} records for training (out of {record_count:,} total)...")
-        training_df = df.sample(fraction=sample_size / record_count, seed=42)
+        training_df = df.sample(n=sample_size, random_state=42)
     else:
         training_df = df
         print(f"Using full dataset ({record_count:,} records) for training...")
@@ -338,10 +201,10 @@ def train_and_predict(
 
 
 def convert_to_clusters(
-    linker: SparkLinker,
-    predictions: DataFrame,
+    linker: Linker,
+    predictions,
     match_probability_threshold: float = 0.5
-) -> DataFrame:
+) -> pd.DataFrame:
     """
     Convert pairwise predictions to clusters using Splink's built-in clustering.
     
@@ -361,29 +224,32 @@ def convert_to_clusters(
         clusters = linker.cluster_pairwise_predictions_at_threshold(
             match_probability_threshold
         )
+        # Convert to pandas if needed
+        if hasattr(clusters, 'to_pandas'):
+            clusters = clusters.to_pandas()
         # Ensure we have the right columns
         if "cluster_id" in clusters.columns and "unique_id" in clusters.columns:
-            return clusters.select("unique_id", "cluster_id")
-    except (AttributeError, TypeError):
-        pass
+            return clusters[["unique_id", "cluster_id"]]
+    except (AttributeError, TypeError) as e:
+        print(f"Method 1 failed: {e}")
     
     try:
         # Method 2: cluster_pairwise_predictions with filtered predictions
-        matches = predictions.filter(
-            col("match_probability") >= match_probability_threshold
-        )
+        matches = predictions[predictions["match_probability"] >= match_probability_threshold]
         clusters = linker.cluster_pairwise_predictions(matches)
+        if hasattr(clusters, 'to_pandas'):
+            clusters = clusters.to_pandas()
         if "cluster_id" in clusters.columns and "unique_id" in clusters.columns:
-            return clusters.select("unique_id", "cluster_id")
-    except (AttributeError, TypeError):
-        pass
+            return clusters[["unique_id", "cluster_id"]]
+    except (AttributeError, TypeError) as e:
+        print(f"Method 2 failed: {e}")
     
     # Method 3: Manual clustering using connected components
     print("Using manual connected components clustering...")
     return _manual_clustering(predictions, match_probability_threshold)
 
 
-def _manual_clustering(predictions: DataFrame, threshold: float) -> DataFrame:
+def _manual_clustering(predictions: pd.DataFrame, threshold: float) -> pd.DataFrame:
     """
     Manual clustering implementation using iterative connected components.
     
@@ -394,58 +260,55 @@ def _manual_clustering(predictions: DataFrame, threshold: float) -> DataFrame:
     Returns:
         DataFrame with cluster assignments
     """
-    from pyspark.sql.functions import min as spark_min, max as spark_max
+    # Convert to pandas if needed
+    if hasattr(predictions, 'to_pandas'):
+        predictions = predictions.to_pandas()
     
     # Filter to matches above threshold
-    matches = predictions.filter(
-        col("match_probability") >= threshold
-    ).select(
-        col("unique_id_l").alias("id1"),
-        col("unique_id_r").alias("id2")
-    ).distinct()
+    matches = predictions[predictions["match_probability"] >= threshold][
+        ["unique_id_l", "unique_id_r"]
+    ].drop_duplicates()
     
     # Get all unique IDs
-    all_ids = matches.select(col("id1").alias("unique_id")).union(
-        matches.select(col("id2").alias("unique_id"))
-    ).distinct()
+    all_ids = pd.concat([
+        matches[["unique_id_l"]].rename(columns={"unique_id_l": "unique_id"}),
+        matches[["unique_id_r"]].rename(columns={"unique_id_r": "unique_id"})
+    ]).drop_duplicates().reset_index(drop=True)
     
     # Initialize: each ID is its own cluster
-    clusters = all_ids.withColumn("cluster_id", col("unique_id"))
+    clusters = all_ids.copy()
+    clusters["cluster_id"] = clusters["unique_id"]
     
     # Iteratively merge clusters (connected components)
     max_iterations = 20
     for iteration in range(max_iterations):
-        # Join clusters with matches to find connected components
-        updated = clusters.alias("c1").join(
-            matches.alias("m"),
-            (col("c1.unique_id") == col("m.id1")) | (col("c1.unique_id") == col("m.id2")),
-            "inner"
-        ).select(
-            when(col("c1.unique_id") == col("m.id1"), col("m.id2"))
-            .otherwise(col("m.id1")).alias("unique_id"),
-            spark_min(col("c1.cluster_id")).alias("cluster_id")
-        ).groupBy("unique_id").agg(
-            spark_min("cluster_id").alias("cluster_id")
-        )
+        # Merge clusters based on matches
+        merged = matches.merge(
+            clusters,
+            left_on="unique_id_l",
+            right_on="unique_id",
+            how="inner"
+        )[["unique_id_r", "cluster_id"]].rename(columns={"unique_id_r": "unique_id"})
         
-        # Also keep IDs that weren't in matches
-        all_updated = all_ids.alias("ids").join(
-            updated.alias("upd"),
-            col("ids.unique_id") == col("upd.unique_id"),
-            "left"
-        ).select(
-            col("ids.unique_id").alias("unique_id"),
-            when(col("upd.cluster_id").isNotNull(), col("upd.cluster_id"))
-            .otherwise(col("ids.unique_id")).alias("cluster_id")
-        )
+        merged2 = matches.merge(
+            clusters,
+            left_on="unique_id_r",
+            right_on="unique_id",
+            how="inner"
+        )[["unique_id_l", "cluster_id"]].rename(columns={"unique_id_l": "unique_id"})
+        
+        all_merged = pd.concat([merged, merged2]).groupby("unique_id")["cluster_id"].min().reset_index()
+        
+        # Update clusters
+        clusters = all_ids.merge(all_merged, on="unique_id", how="left")
+        clusters["cluster_id"] = clusters["cluster_id_y"].fillna(clusters["unique_id"])
+        clusters = clusters[["unique_id", "cluster_id"]]
         
         # Check convergence
-        old_clusters = clusters.select("cluster_id").distinct().count()
-        new_clusters = all_updated.select("cluster_id").distinct().count()
+        old_count = clusters["cluster_id"].nunique()
+        new_count = clusters["cluster_id"].nunique()
         
-        clusters = all_updated
-        
-        if old_clusters == new_clusters:
+        if old_count == new_count:
             print(f"Clustering converged after {iteration + 1} iterations")
             break
     
@@ -453,9 +316,9 @@ def _manual_clustering(predictions: DataFrame, threshold: float) -> DataFrame:
 
 
 def add_representative_records(
-    clusters: DataFrame,
-    original_df: DataFrame
-) -> DataFrame:
+    clusters: pd.DataFrame,
+    original_df: pd.DataFrame
+) -> pd.DataFrame:
     """
     Add representative record information to clusters.
     
@@ -468,47 +331,46 @@ def add_representative_records(
     """
     print("Determining representative records per cluster...")
     
+    # Convert to pandas if needed
+    if hasattr(clusters, 'to_pandas'):
+        clusters = clusters.to_pandas()
+    if hasattr(original_df, 'to_pandas'):
+        original_df = original_df.to_pandas()
+    
     # Join clusters with original data
-    clustered_df = clusters.join(
+    clustered_df = clusters.merge(
         original_df,
         on="unique_id",
         how="inner"
     )
     
     # Select representative record (longest name, or first if tie)
-    window_spec = Window.partitionBy("cluster_id").orderBy(
-        length(col("tv_name_regulatized")).desc(),
-        col("unique_id").asc()
+    clustered_df["name_length"] = clustered_df["tv_name_regulatized"].str.len()
+    clustered_df = clustered_df.sort_values(
+        by=["cluster_id", "name_length", "unique_id"],
+        ascending=[True, False, True]
     )
-    
-    clustered_with_rep = clustered_df.withColumn(
-        "is_representative",
-        row_number().over(window_spec) == 1
+    clustered_df["is_representative"] = (
+        clustered_df.groupby("cluster_id").cumcount() == 0
     )
     
     # Get representative info
-    representatives = clustered_with_rep.filter(
-        col("is_representative") == True
-    ).select(
-        col("cluster_id"),
-        col("tv_name_regulatized").alias("representative_name"),
-        col("tv_country_code").alias("representative_country")
-    )
+    representatives = clustered_df[clustered_df["is_representative"]][
+        ["cluster_id", "tv_name_regulatized", "tv_country_code"]
+    ].rename(columns={
+        "tv_name_regulatized": "representative_name",
+        "tv_country_code": "representative_country"
+    })
     
     # Add representative info to all records
-    final_df = clustered_df.join(
+    final_df = clustered_df.merge(
         representatives,
         on="cluster_id",
         how="left"
-    ).select(
-        col("cluster_id"),
-        col("unique_id"),
-        col("tv_name_regulatized"),
-        col("tv_country_code"),
-        col("representative_name"),
-        col("representative_country"),
-        col("is_representative")
-    )
+    )[
+        ["cluster_id", "unique_id", "tv_name_regulatized", "tv_country_code",
+         "representative_name", "representative_country", "is_representative"]
+    ]
     
     return final_df
 
@@ -533,24 +395,25 @@ def run_pipeline(
     Returns:
         Final clustered DataFrame
     """
-    # Create Spark session
-    spark = create_spark_session()
-    
     try:
         # Load and prepare data
-        df = load_and_prepare_data(spark, input_csv, unique_id_col)
+        df = load_and_prepare_data(input_csv, unique_id_col)
         
         # Create Splink linker
         print("Initializing Splink linker...")
         settings = create_splink_settings()
-        linker = SparkLinker(df, settings)
+        linker = Linker(df, settings)
         
         # Train the model
         trained_linker = train_and_predict(linker, df, training_sample_size)
         
         # Generate predictions
         print("Generating pairwise predictions...")
-        predictions = trained_linker.predict(df)
+        predictions = trained_linker.predict()
+        
+        # Convert to pandas if needed
+        if hasattr(predictions, 'to_pandas'):
+            predictions = predictions.to_pandas()
         
         # Convert to clusters using Splink's built-in clustering
         clusters = convert_to_clusters(trained_linker, predictions, match_probability_threshold)
@@ -560,18 +423,12 @@ def run_pipeline(
         
         # Save to CSV
         print(f"Saving results to {output_csv}...")
-        final_df.coalesce(1).write \
-            .mode("overwrite") \
-            .option("header", "true") \
-            .csv(output_csv.replace(".csv", "_temp"))
-        
-        # Rename the output file (Spark writes to directory)
-        # Note: In production, you may want to handle this differently
-        print(f"Results saved. Check {output_csv.replace('.csv', '_temp')} directory for output files.")
+        final_df.to_csv(output_csv, index=False)
+        print(f"Results saved to {output_csv}")
         
         # Show summary statistics
-        cluster_count = final_df.select("cluster_id").distinct().count()
-        total_records = final_df.count()
+        cluster_count = final_df["cluster_id"].nunique()
+        total_records = len(final_df)
         avg_cluster_size = total_records / cluster_count if cluster_count > 0 else 0
         
         print("\n" + "="*50)
@@ -585,8 +442,9 @@ def run_pipeline(
         
         return final_df
         
-    finally:
-        spark.stop()
+    except Exception as e:
+        print(f"Error running pipeline: {e}")
+        raise
 
 
 def main():

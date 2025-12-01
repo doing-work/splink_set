@@ -1,5 +1,4 @@
-splink[spark]>=4.0.0
-pyspark>=3.5.0
+splink>=4.0.0
 pandas>=2.0.0
 numpy>=1.24.0
 

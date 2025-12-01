@@ -1,24 +1,21 @@
 # Splink Company Record Linkage Pipeline
 
-A production-ready entity resolution pipeline for grouping similar companies based on normalized names and country codes. Optimized for datasets with 1-5 million records using PySpark and Splink 4.x.
+A production-ready entity resolution pipeline for grouping similar companies based on normalized names and country codes. Optimized for datasets with 1-5 million records using DuckDB and Splink 4.x (no Spark required).
 
 ## Features
 
 - **Efficient Blocking**: Multi-level blocking strategies to reduce comparisons from O(n²) to manageable sizes
 - **Advanced Matching**: Uses exact match, Jaro-Winkler, and Jaccard similarity for company names
 - **Country-Aware**: Strongly weights same-country matches while allowing cross-country matches
-- **Scalable**: Handles 1-5M records efficiently with Spark
+- **Scalable**: Handles 1-5M records efficiently with DuckDB (no Spark needed)
+- **Simple Setup**: No Java, Spark, or complex dependencies required
 - **Production-Ready**: Includes error handling, logging, and comprehensive configuration
 
 ## Installation
 
 ### Prerequisites
 
-1. **Java 8 or 11** (required for Spark)
-   - Download from [Oracle](https://www.oracle.com/java/technologies/downloads/) or [OpenJDK](https://adoptium.net/)
-   - Verify: `java -version`
-
-2. **Python 3.8+**
+1. **Python 3.8+**
    - Verify: `python --version`
 
 ### Install Dependencies
@@ -27,11 +24,7 @@ A production-ready entity resolution pipeline for grouping similar companies bas
 pip install -r requirements.txt
 ```
 
-### Verify Spark Installation
-
-```bash
-python -c "from pyspark.sql import SparkSession; print('Spark installed successfully')"
-```
+That's it! No Java, Spark, or other complex setup needed. DuckDB is included with Splink.
 
 ## Usage
 
