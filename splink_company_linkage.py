@@ -17,7 +17,18 @@ from pyspark.sql.functions import (
     collect_list, first, row_number, concat_ws
 )
 from pyspark.sql.window import Window
-from splink.spark.linker import SparkLinker
+
+# Import Splink with fallback for different versions
+try:
+    from splink.spark.linker import SparkLinker
+except ImportError:
+    try:
+        from splink.spark import SparkLinker
+    except ImportError:
+        raise ImportError(
+            "Splink Spark backend not found. Please install with: pip install 'splink[spark]'"
+        )
+
 from splink.comparison import Comparison, ComparisonLevel
 from splink.comparison_library import (
     exact_match,
