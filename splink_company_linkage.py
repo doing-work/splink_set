@@ -30,8 +30,46 @@ except ImportError:
         try:
             from splink.spark import SparkLinker
         except ImportError:
+            import sys
+            error_msg = """
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    SPLINK SPARK BACKEND NOT INSTALLED                       ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+The Splink Spark backend is required but not installed.
+
+INSTALLATION INSTRUCTIONS:
+───────────────────────────────────────────────────────────────────────────────
+
+1. Run this command in a Colab cell or terminal:
+   
+   !pip install 'splink[spark]' pyspark pandas numpy
+
+2. RESTART YOUR RUNTIME (important!):
+   - In Colab: Runtime → Restart runtime
+   - In Jupyter: Kernel → Restart
+
+3. Then run this script again.
+
+ALTERNATIVE (if above doesn't work):
+───────────────────────────────────────────────────────────────────────────────
+
+!pip uninstall splink -y
+!pip install 'splink[spark]'
+# Then restart runtime
+
+VERIFICATION:
+───────────────────────────────────────────────────────────────────────────────
+
+After installation, verify with:
+  from splink.spark.spark_linker import SparkLinker
+  print("✓ Installation successful!")
+
+For more help, see: https://moj-analytical-services.github.io/splink/
+"""
+            print(error_msg)
             raise ImportError(
-                "Splink Spark backend not found. Please install with: pip install 'splink[spark]'"
+                "Splink Spark backend not found. Install with: pip install 'splink[spark]'"
             )
 
 from splink.comparison import Comparison, ComparisonLevel
