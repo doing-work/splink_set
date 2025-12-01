@@ -1,0 +1,53 @@
+{
+  "link_type": "dedupe_only",
+  "blocking_rules": [
+    "l.tv_name_regulatized[:2] = r.tv_name_regulatized[:2] AND l.tv_country_code = r.tv_country_code",
+    "l.tv_name_regulatized[:3] = r.tv_name_regulatized[:3] AND l.tv_country_code = r.tv_country_code",
+    "l.tv_country_code = r.tv_country_code AND levenshtein(l.tv_name_regulatized, r.tv_name_regulatized) <= 3"
+  ],
+  "comparisons": [
+    {
+      "column_name": "tv_name_regulatized",
+      "comparison_levels": [
+        {
+          "sql_condition": "tv_name_regulatized_l = tv_name_regulatized_r",
+          "label_for_charts": "Exact match"
+        },
+        {
+          "sql_condition": "jaro_winkler_sim(tv_name_regulatized_l, tv_name_regulatized_r) >= 0.85",
+          "label_for_charts": "Jaro-Winkler >= 0.85"
+        },
+        {
+          "sql_condition": "jaro_winkler_sim(tv_name_regulatized_l, tv_name_regulatized_r) >= 0.70",
+          "label_for_charts": "Jaro-Winkler >= 0.70"
+        },
+        {
+          "sql_condition": "jaccard_similarity(tv_name_regulatized_l, tv_name_regulatized_r) >= 0.60",
+          "label_for_charts": "Jaccard >= 0.60"
+        },
+        {
+          "sql_condition": "ELSE",
+          "label_for_charts": "All other comparisons"
+        }
+      ]
+    },
+    {
+      "column_name": "tv_country_code",
+      "comparison_levels": [
+        {
+          "sql_condition": "tv_country_code_l = tv_country_code_r",
+          "label_for_charts": "Exact match"
+        },
+        {
+          "sql_condition": "ELSE",
+          "label_for_charts": "Different country"
+        }
+      ]
+    }
+  ],
+  "retain_matching_columns": true,
+  "retain_intermediate_calculation_columns": false,
+  "em_convergence": 0.0001,
+  "max_iterations": 50
+}
+

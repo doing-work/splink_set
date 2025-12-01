@@ -1,0 +1,514 @@
+tv_name_regulatized,tv_country_code
+microsoft corporation,US
+microsoft corp,US
+microsoft,US
+apple inc,US
+apple incorporated,US
+apple,US
+google llc,US
+google inc,US
+google,US
+amazon com inc,US
+amazon,US
+amazon com,US
+tesla motors,US
+tesla inc,US
+tesla,US
+meta platforms,US
+facebook inc,US
+facebook,US
+netflix inc,US
+netflix,US
+nvidia corporation,US
+nvidia corp,US
+nvidia,US
+adobe systems,US
+adobe inc,US
+adobe,US
+oracle corporation,US
+oracle corp,US
+oracle,US
+intel corporation,US
+intel corp,US
+intel,US
+samsung electronics,KR
+samsung,KR
+samsung co ltd,KR
+sony corporation,JP
+sony corp,JP
+sony,JP
+toyota motor,JP
+toyota,JP
+toyota motors,JP
+volkswagen ag,DE
+volkswagen,DE
+vw,DE
+bmw ag,DE
+bmw,DE
+mercedes benz,DE
+mercedes,DE
+siemens ag,DE
+siemens,DE
+sap se,DE
+sap,DE
+nestle sa,CH
+nestle,CH
+roche holding,CH
+roche,CH
+novartis ag,CH
+novartis,CH
+ubs ag,CH
+ubs,CH
+credit suisse,CH
+credit suisse group,CH
+barclays plc,GB
+barclays,GB
+hsbc holdings,GB
+hsbc,GB
+lloyds banking,GB
+lloyds,GB
+royal bank of scotland,GB
+rbs,GB
+bp plc,GB
+bp,GB
+shell plc,GB
+shell,GB
+vodafone group,GB
+vodafone,GB
+glaxosmithkline,GB
+gsk,GB
+astrazeneca,GB
+astrazeneca plc,GB
+unilever plc,GB
+unilever,GB
+total energies,FR
+total,FR
+sanofi sa,FR
+sanofi,FR
+loreal,FR
+loreal sa,FR
+airbus se,FR
+airbus,FR
+lvmh,FR
+lvmh moet hennessy,FR
+renault,FR
+renault sa,FR
+peugeot,FR
+psa peugeot citroen,FR
+bnp paribas,FR
+bnp,FR
+societe generale,FR
+socgen,FR
+credit agricole,FR
+credit agricole sa,FR
+eni spa,IT
+eni,IT
+enel spa,IT
+enel,IT
+intesa sanpaolo,IT
+intesa,IT
+unicredit,IT
+unicredit spa,IT
+generali,IT
+assicurazioni generali,IT
+ferrari,IT
+ferrari spa,IT
+fiat,IT
+fiat chrysler,IT
+stellantis,IT
+fiat chrysler automobiles,IT
+telefonica sa,ES
+telefonica,ES
+iberdrola,ES
+iberdrola sa,ES
+santander,ES
+banco santander,ES
+bbva,ES
+banco bilbao vizcaya,ES
+repsol,ES
+repsol sa,ES
+inditex,ES
+inditex sa,ES
+royal dutch shell,NL
+shell,NL
+shell plc,NL
+asml holding,NL
+asml,NL
+philips,NL
+koninklijke philips,NL
+ing groep,NL
+ing,NL
+rabobank,NL
+cooperatieve rabobank,NL
+unilever,NL
+unilever nv,NL
+heineken,NL
+heineken nv,NL
+akzo nobel,NL
+akzonobel,NL
+equinor asa,NO
+equinor,NO
+statkraft,NO
+statkraft asf,NO
+telenor,NO
+telenor asa,NO
+dnb,NO
+dnb asa,NO
+ericsson,SE
+ericsson ab,SE
+volvo,SE
+volvo ab,SE
+scania,SE
+scania ab,SE
+atlas copco,SE
+atlas copco ab,SE
+sandvik,SE
+sandvik ab,SE
+skf,SE
+skf ab,SE
+nokia,FI
+nokia corporation,FI
+nokia oyj,FI
+fortum,FI
+fortum oyj,FI
+neste,FI
+neste oyj,FI
+kone,FI
+kone oyj,FI
+wärtsilä,FI
+wartsila,FI
+wartsila oyj,FI
+danone,FR
+danone sa,FR
+veolia,FR
+veolia environnement,FR
+engie,FR
+engie sa,FR
+orange,FR
+orange sa,FR
+bouygues,FR
+bouygues sa,FR
+vivendi,FR
+vivendi sa,FR
+capgemini,FR
+capgemini se,FR
+atos,FR
+atos se,FR
+dassault systemes,FR
+dassault,FR
+schneider electric,FR
+schneider,FR
+legrand,FR
+legrand sa,FR
+saint gobain,FR
+compagnie de saint gobain,FR
+arcelormittal,LU
+arcelor mittal,LU
+arcelor,LU
+mittal steel,LU
+tencent holdings,CN
+tencent,CN
+alibaba group,CN
+alibaba,CN
+baidu,CN
+baidu inc,CN
+huawei,CN
+huawei technologies,CN
+xiaomi,CN
+xiaomi corporation,CN
+bytedance,CN
+byte dance,CN
+meituan,CN
+meituan dianping,CN
+jd com,CN
+jd,CN
+ping an,CN
+ping an insurance,CN
+icbc,CN
+industrial and commercial bank,CN
+china construction bank,CN
+ccb,CN
+bank of china,CN
+boc,CN
+agricultural bank of china,CN
+abc,CN
+petrochina,CN
+petro china,CN
+sinopec,CN
+china petroleum,CN
+china mobile,CN
+china telecom,CN
+china unicom,CN
+china life,CN
+china life insurance,CN
+china pacific insurance,CN
+cpic,CN
+china mercha,CN
+china merchants bank,CN
+cmb,CN
+china citic bank,CN
+citic,CN
+softbank group,JP
+softbank,JP
+softbank corp,JP
+mitsubishi,JP
+mitsubishi corporation,JP
+mitsui,JP
+mitsui and co,JP
+sumitomo,JP
+sumitomo corporation,JP
+ito chu,JP
+ito chu corporation,JP
+marubeni,JP
+marubeni corporation,JP
+honda motor,JP
+honda,JP
+nissan motor,JP
+nissan,JP
+mazda motor,JP
+mazda,JP
+subaru,JP
+subaru corporation,JP
+mitsubishi motors,JP
+mitsubishi motor,JP
+canon,JP
+canon inc,JP
+fujifilm,JP
+fujifilm holdings,JP
+panasonic,JP
+panasonic corporation,JP
+sharp,JP
+sharp corporation,JP
+hitachi,JP
+hitachi ltd,JP
+toshiba,JP
+toshiba corporation,JP
+nec,JP
+nec corporation,JP
+fujitsu,JP
+fujitsu limited,JP
+kyocera,JP
+kyocera corporation,JP
+omron,JP
+omron corporation,JP
+yaskawa,JP
+yaskawa electric,JP
+fanuc,JP
+fanuc corporation,JP
+denso,JP
+denso corporation,JP
+aisin,JP
+aisin seiki,JP
+bridgestone,JP
+bridgestone corporation,JP
+yokohama rubber,JP
+yokohama,JP
+sumitomo rubber,JP
+sumitomo,JP
+ntt,JP
+ntt docomo,JP
+kddi,JP
+kddi corporation,JP
+rakuten,JP
+rakuten inc,JP
+line,JP
+line corporation,JP
+z holdings,JP
+yahoo japan,JP
+recruit,JP
+recruit holdings,JP
+keyence,JP
+keyence corporation,JP
+m3,JP
+m3 inc,JP
+mercari,JP
+mercari inc,JP
+cyberagent,JP
+cyberagent inc,JP
+gmo internet,JP
+gmo,JP
+mixi,JP
+mixi inc,JP
+gree,JP
+gree inc,JP
+de na,JP
+dena,JP
+colopl,JP
+colopl inc,JP
+klab,JP
+klab inc,JP
+gungho,JP
+gungho online,JP
+nexon,JP
+nexon co,JP
+ncsoft,KR
+ncsoft corporation,KR
+nexon,KR
+nexon co,KR
+netmarble,KR
+netmarble corporation,KR
+kakao,KR
+kakao corp,KR
+naver,KR
+naver corporation,KR
+coupang,KR
+coupang inc,KR
+lotte,KR
+lotte corporation,KR
+lg,KR
+lg electronics,KR
+lg chem,KR
+lg chemical,KR
+lg display,KR
+lg energy solution,KR
+lg energy,KR
+sk hynix,KR
+sk hynix inc,KR
+sk telecom,KR
+sk,KR
+kt,KR
+kt corporation,KR
+posco,KR
+posco holdings,KR
+hyundai motor,KR
+hyundai,KR
+kia,KR
+kia corporation,KR
+hanwha,KR
+hanwha corporation,KR
+doosan,KR
+doosan corporation,KR
+cj,KR
+cj corporation,KR
+gs,KR
+gs corporation,KR
+lotte,KR
+lotte corporation,KR
+shinhan,KR
+shinhan financial,KR
+kb financial,KR
+kb,KR
+hana financial,KR
+hana,KR
+woori financial,KR
+woori,KR
+nh financial,KR
+nh,KR
+meritz financial,KR
+meritz,KR
+samsung life,KR
+samsung life insurance,KR
+samsung fire,KR
+samsung fire and marine,KR
+hanwha life,KR
+hanwha life insurance,KR
+kyobo life,KR
+kyobo life insurance,KR
+dongbu insurance,KR
+dongbu,KR
+db insurance,KR
+db,KR
+lotte insurance,KR
+lotte non life,KR
+hyundai marine,KR
+hyundai marine and fire,KR
+samsung sdi,KR
+samsung sdi co,KR
+lg chem,KR
+lg chemical,KR
+sk innovation,KR
+sk,KR
+posco chemical,KR
+posco,KR
+hanwha solutions,KR
+hanwha,KR
+oci,KR
+oci company,KR
+kumho petrochemical,KR
+kumho,KR
+lg household,KR
+lg household and health,KR
+amorepacific,KR
+amorepacific corporation,KR
+lg household,KR
+lg hnh,KR
+cj cheiljedang,KR
+cj,KR
+dongwon f and b,KR
+dongwon,KR
+ottogi,KR
+ottogi corporation,KR
+daesang,KR
+daesang corporation,KR
+sempio,KR
+sempio foods,KR
+nongshim,KR
+nongshim corporation,KR
+orion,KR
+orion corporation,KR
+lotte confectionery,KR
+lotte,KR
+haitai confectionery,KR
+haitai,KR
+crown confectionery,KR
+crown,KR
+롯데,KR
+롯데그룹,KR
+삼성,KR
+삼성그룹,KR
+현대,KR
+현대그룹,KR
+sk,KR
+sk그룹,KR
+lg,KR
+lg그룹,KR
+posco,KR
+포스코,KR
+한화,KR
+한화그룹,KR
+두산,KR
+두산그룹,KR
+cj,KR
+cj그룹,KR
+gs,KR
+gs그룹,KR
+신한,KR
+신한금융,KR
+kb,KR
+kb금융,KR
+하나,KR
+하나금융,KR
+우리,KR
+우리금융,KR
+nh,KR
+nh금융,KR
+메리츠,KR
+메리츠금융,KR
+삼성생명,KR
+삼성화재,KR
+한화생명,KR
+교보생명,KR
+동부화재,KR
+db손해보험,KR
+롯데손해보험,KR
+현대해상,KR
+삼성sdi,KR
+lg화학,KR
+sk이노베이션,KR
+posco케미칼,KR
+한화솔루션,KR
+oci,KR
+금호석유화학,KR
+lg생활건강,KR
+아모레퍼시픽,KR
+cj제일제당,KR
+동원f and b,KR
+오뚜기,KR
+대상,KR
+샘표식품,KR
+농심,KR
+오리온,KR
+롯데제과,KR
+해태제과,KR
+크라운제과,KR
+

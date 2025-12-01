@@ -1,0 +1,40 @@
+# Large data files
+*.csv
+!test_sample.csv
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# Spark
+spark-warehouse/
+metastore_db/
+derby.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Output directories
+results/
+output/
+*.csv_temp/
+*_temp/
+
+# Jupyter
+.ipynb_checkpoints/
+
