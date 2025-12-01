@@ -15,15 +15,53 @@ import pandas as pd
 
 # Import Splink DuckDB linker (default backend, no Spark needed)
 try:
-    from splink.duckdb.linker import DuckDBLinker
+    # Try Splink 4.x import path
+    from splink.duckdb.duckdb_linker import DuckDBLinker
     Linker = DuckDBLinker
 except ImportError:
     try:
-        from splink.linker import Linker
+        # Alternative import path
+        from splink.duckdb.linker import DuckDBLinker
+        Linker = DuckDBLinker
     except ImportError:
-        raise ImportError(
-            "Splink not installed. Install with: pip install splink"
-        )
+        try:
+            # Fallback to generic linker
+            from splink.linker import Linker
+        except ImportError:
+            error_msg = """
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                         SPLINK NOT INSTALLED                                 ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+Splink is required but not installed.
+
+INSTALLATION:
+───────────────────────────────────────────────────────────────────────────────
+
+Run this command:
+
+    pip install splink pandas numpy
+
+Or install from requirements:
+
+    pip install -r requirements.txt
+
+After installation, restart your runtime/kernel if you're in Colab/Jupyter.
+
+VERIFICATION:
+───────────────────────────────────────────────────────────────────────────────
+
+After installation, verify with:
+
+    import splink
+    print(f"Splink version: {splink.__version__}")
+
+For more help, see: https://moj-analytical-services.github.io/splink/
+"""
+            print(error_msg)
+            raise ImportError(
+                "Splink not installed. Install with: pip install splink"
+            )
 
 from splink.comparison import Comparison, ComparisonLevel
 from splink.comparison_library import (
